@@ -10,7 +10,24 @@ Real audio transcription is out of scope (per the assignment). Transcripts/summa
 
 ---
 
-## 1. Quick start
+## 🔗 Live links
+
+| | |
+|---|---|
+| **Live app** | [https://fireflies-clone-app.vercel.app](https://fireflies-clone-app.vercel.app/) |
+| **Backend API** | [https://fireflies-clone-app.onrender.com](https://fireflies-clone-app.onrender.com) |
+| **API docs (Swagger)** | [https://fireflies-clone-app.onrender.com/docs](https://fireflies-clone-app.onrender.com/docs) |
+| **GitHub repo** | [https://github.com/chulparyuvraj/fireflies-clone-app](https://github.com/chulparyuvraj/fireflies-clone-app) |
+
+> **Note:** the backend runs on Render's free tier, which spins down after ~15 minutes of inactivity. The first request after idling can take 30–50 seconds to wake up — if the dashboard looks stuck loading the first time, that's why. It resolves itself after that first request.
+>
+> Also see the data-persistence note in Section 8 — Render's free tier has an ephemeral filesystem, so CRUD changes may reset to the 4 seeded meetings if the service restarts.
+
+---
+
+## 1. Quick start (local development)
+
+The live deployed links are above — this section is only needed if you want to run it locally (e.g. for the evaluation interview to show live code changes).
 
 You need **Python 3.10+** and **Node.js 18+** installed. Two terminals, one for each service.
 
@@ -224,6 +241,8 @@ All endpoints are prefixed `/api`. Full interactive reference at `/docs` (Swagge
 
 ## 8. Deploying it (Render + Vercel)
 
+✅ **Already deployed** — see the live links at the top of this README. The steps below document how it was done, for reference or if redeploying elsewhere.
+
 The repo already includes `backend/Procfile` and `backend/render.yaml` for Render, and the frontend needs zero code changes — just one environment variable on Vercel's side.
 
 ### Step 1 — Push to GitHub
@@ -234,24 +253,23 @@ git add .
 echo "venv/\nnode_modules/\n.next/\n__pycache__/\n*.pyc" > .gitignore
 git commit -m "Fireflies clone — SDE assignment"
 git branch -M main
-git remote add origin https://github.com/<your-username>/fireflies-clone.git
+git remote add origin https://github.com/chulparyuvraj/fireflies-clone-app.git
 git push -u origin main
 ```
 
 ### Step 2 — Backend on Render
 1. Go to [render.com](https://render.com) → **New → Web Service** → connect your GitHub repo.
 2. Set **Root Directory** to `backend`.
-3. Render should auto-detect `render.yaml` (build: `pip install -r requirements.txt && python -m app.seed`, start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`). If it doesn't auto-detect, set those two commands manually.
-4. Deploy. Once live, copy the URL — something like `https://fireflies-clone-backend.onrender.com`.
-5. Sanity check: visit `https://<your-backend>.onrender.com/api/health` → should return `{"status":"ok"}`.
-
-   > Free-tier Render services spin down after inactivity, so the first request after idling can take ~30–50s to wake up — that's expected, not a bug.
+3. Build command: `pip install -r requirements.txt && python -m app.seed`. Start command: `uvicorn app.main:app --host 0.0.0.0 --port $PORT`.
+4. Add environment variable `PYTHON_VERSION` = `3.11.9` (Render defaults to a newer Python that lacks pre-built wheels for `pydantic-core`, causing a Rust/maturin build failure — pinning to 3.11.9 avoids that).
+5. Deploy. Live at `https://fireflies-clone-app.onrender.com`.
+6. Sanity check: `https://fireflies-clone-app.onrender.com/api/health` → `{"status":"ok"}`.
 
 ### Step 3 — Frontend on Vercel
 1. Go to [vercel.com](https://vercel.com) → **Add New → Project** → import the same GitHub repo.
 2. Set **Root Directory** to `frontend`.
-3. Add an environment variable: `NEXT_PUBLIC_API_URL` = your Render backend URL from Step 2 (no trailing slash).
-4. Deploy. Vercel auto-detects Next.js — no build command changes needed.
+3. Add an environment variable: `NEXT_PUBLIC_API_URL` = `https://fireflies-clone-app.onrender.com` (no trailing slash).
+4. Deploy. Vercel auto-detects Next.js — no build command changes needed. Live at `https://fireflies-clone-app.vercel.app`.
 
 ### Step 4 — Verify end-to-end
 Open the deployed Vercel URL, confirm the seeded meetings load, open one, and check the transcript/player sync and action items work against the live Render backend.
